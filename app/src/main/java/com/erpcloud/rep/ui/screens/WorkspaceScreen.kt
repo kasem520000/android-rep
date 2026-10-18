@@ -271,14 +271,14 @@ private fun WorkspaceBody(
                                 KeyValue("الصنف", order.itemName)
                                 KeyValue("المحمَّل / المستلَم", "${Dec.kg(order.loadedQty)} / ${Dec.kg(order.receivedQty)} كجم")
                                 KeyValue("المتبقّي المتوقّع", "${Dec.kg(order.expectedRemainingQty)} كجم")
-                                if (Dec.parse(order.discrepancyQty)?.signum() > 0) {
+                                if ((Dec.parse(order.discrepancyQty)?.signum() ?: 0) > 0) {
                                     Text(
                                         "نقصٌ عند الاستلام ${Dec.kg(order.discrepancyQty)} كجم — بانتظار قرار المحاسب.",
                                         style = MaterialTheme.typography.bodyMedium,
                                         color = MaterialTheme.colorScheme.error,
                                     )
                                 }
-                                if (Dec.parse(order.shortageQty)?.signum() > 0) {
+                                if ((Dec.parse(order.shortageQty)?.signum() ?: 0) > 0) {
                                     Text(
                                         "عجزٌ مُعلن ${Dec.kg(order.shortageQty)} كجم بقيمة ${Dec.money(order.shortageValue)} ريال.",
                                         style = MaterialTheme.typography.bodyMedium,
@@ -309,7 +309,7 @@ private fun WorkspaceBody(
                                     Text(doc.number, fontWeight = FontWeight.SemiBold)
                                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                                         if (doc.isSale) StatusChip("بيع", ChipTone.INFO) else StatusChip("مرتجع", ChipTone.WARN)
-                                        if (Dec.parse(doc.outstanding)?.signum() > 0) StatusChip("عليه متبقٍّ", ChipTone.DANGER)
+                                        if ((Dec.parse(doc.outstanding)?.signum() ?: 0) > 0) StatusChip("عليه متبقٍّ", ChipTone.DANGER)
                                     }
                                 }
                                 KeyValue("التاريخ", doc.docDate)
