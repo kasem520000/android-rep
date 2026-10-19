@@ -14,6 +14,9 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -86,12 +89,37 @@ private object Routes {
 fun AppRoot(vm: AppViewModel) {
     val state by vm.uiState.collectAsState()
     val notice by vm.notice.collectAsState()
+
+    if (!state.sessionLoaded) {
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator()
+        }
+        return
+    }
+
     val navController = rememberNavController()
 
-    // الدخولُ والخروجُ يقودان التوجيه: بلا جلسةٍ → شاشةُ الدخول، وبجلسةٍ → المساحة.
+    // الدخولُ والخروجُ يقودان التوجيه عند تغيّر الحالة أثناء عمل التطبيق
+    var previousLoggedIn by remember { mutableStateOf<Boolean?>(null) }
     LaunchedEffect(state.session.loggedIn) {
-        val current = navController.currentBackStackEntry?.destination?.route
-        if (state.session.loggedIn && current == Routes.LOGIN) {
+        if (previousLoggedIn == null) {
+            // أول قراءة بعد اكتمال تحميل الجلسة: NavHost يبدأ من الوجهة الصحيحة تلقائيًّا
+            previousLoggedIn = state.session.loggedIn
+            return@LaunchedEffect
+        }
+        if (previousLoggedIn == state.session.loggedIn) return@LaunchedEffect
+        previousLoggedIn = state.session.loggedIn
+
+        val hasGraph = try {
+            navController.graph
+            true
+        } catch (_: Exception) {
+            false
+        }
+        if (!hasGraph) return@LaunchedEffect
+
+        val current = navController.currentDestination?.route
+        if (state.session.loggedIn && current != Routes.HOME) {
             navController.navigate(Routes.HOME) {
                 popUpTo(Routes.LOGIN) { inclusive = true }
             }
@@ -100,13 +128,6 @@ fun AppRoot(vm: AppViewModel) {
                 popUpTo(0) { inclusive = true }
             }
         }
-    }
-
-    if (!state.sessionLoaded) {
-        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            CircularProgressIndicator()
-        }
-        return
     }
 
     Column(Modifier.fillMaxSize()) {
