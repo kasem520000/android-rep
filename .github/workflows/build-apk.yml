@@ -18,7 +18,7 @@
 name: Build APK
 
 on:
-  workflow_dispatch: # تشغيلٌ يدويّ من تبويب Actions
+  workflow_dispatch:
   push:
     branches: [main, master]
 
@@ -31,6 +31,7 @@ jobs:
       KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
       KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
       KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+      JAVA_TOOL_OPTIONS: "-Djava.net.preferIPv4Stack=true -Djava.net.preferIPv6Addresses=false"
 
     steps:
       - name: Checkout
@@ -55,11 +56,61 @@ jobs:
           echo "${KEYSTORE_BASE64}" | base64 --decode > "$RUNNER_TEMP/release.keystore"
           echo "KEYSTORE_FILE=$RUNNER_TEMP/release.keystore" >> "$GITHUB_ENV"
 
-      - name: Build Debug APK
-        run: ./gradlew assembleDebug --stacktrace
+      - name: Network diagnostics (informational)
+        run: |
+          echo "Time: $(date -u)"
+          echo "Checking IPv4 connectivity..."
+          ping -c 1 8.8.8.8 || true
+          curl -4 -I https://repo.maven.apache.org/maven2/ || true
+          curl -4 -I https://plugins.gradle.org/ || true
 
-      - name: Build Release APK
-        run: ./gradlew assembleRelease --stacktrace
+      - name: Build Debug APK (with retries)
+        run: |
+          set -euo pipefail
+          retry() {
+            local n=0
+            local max=3
+            local cmd="$*"
+            until [ $n -ge $max ]
+            do
+              echo "Attempt $((n+1))/$max: running: $cmd"
+              if $cmd; then
+                echo "Command succeeded"
+                return 0
+              fi
+              n=$((n+1))
+              echo "Command failed — sleeping $((n*10))s before retry"
+              sleep $((n*10))
+            done
+            echo "Command failed after $max attempts" >&2
+            return 1
+          }
+
+          retry ./gradlew assembleDebug --stacktrace
+
+      - name: Build Release APK (with retries)
+        run: |
+          set -euo pipefail
+          retry() {
+            local n=0
+            local max=3
+            local cmd="$*"
+            until [ $n -ge $max ]
+            do
+              echo "Attempt $((n+1))/$max: running: $cmd"
+              if $cmd; then
+                echo "Command succeeded"
+                return 0
+              fi
+              n=$((n+1))
+              echo "Command failed — sleeping $((n*10))s before retry"
+              sleep $((n*10))
+            done
+            echo "Command failed after $max attempts" >&2
+            return 1
+          }
+
+          retry ./gradlew assembleRelease --stacktrace
 
       - name: Upload APKs
         uses: actions/upload-artifact@v4
