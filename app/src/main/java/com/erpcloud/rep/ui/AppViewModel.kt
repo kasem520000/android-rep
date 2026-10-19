@@ -86,7 +86,7 @@ data class SubmitOutcome(val result: ActionResult, val intent: Pair<String, Stri
  */
 class AppViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val container get() = (application as com.erpcloud.rep.RepApp).container
+    private val container get() = (getApplication() as com.erpcloud.rep.RepApp).container
     private val repo: RepRepository get() = container.repository
     private val appContext: Context get() = getApplication()
 

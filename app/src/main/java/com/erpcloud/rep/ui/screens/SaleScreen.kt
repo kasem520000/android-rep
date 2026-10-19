@@ -77,8 +77,8 @@ fun SaleScreen(vm: AppViewModel, onDone: () -> Unit) {
      *  الطابور وقبل إغلاق الشاشة، لا تُبنى نيّةٌ ثانيةٌ بمفتاحٍ جديد. */
     var intentKey by rememberSaveable { mutableStateOf("") }
     var intentFingerprint by rememberSaveable { mutableStateOf("") }
-    val currentIntent: Pair<String, String>?
-        get() = intentKey.takeIf { it.isNotBlank() }?.let { it to intentFingerprint }
+    val currentIntent: Pair<String, String>? =
+        intentKey.takeIf { it.isNotBlank() }?.let { it to intentFingerprint }
 
     val saleable = workspace?.saleableLoadOrders ?: emptyList()
     val loadOrder = saleable.firstOrNull { it.id == loadOrderId }
@@ -203,7 +203,7 @@ fun SaleScreen(vm: AppViewModel, onDone: () -> Unit) {
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     modifier = Modifier.fillMaxWidth(),
                 )
-                if (Dec.parse(bonusQty)?.signum() > 0) {
+                if ((Dec.parse(bonusQty)?.signum() ?: 0) > 0) {
                     OutlinedTextField(
                         value = bonusReason,
                         onValueChange = { bonusReason = it },

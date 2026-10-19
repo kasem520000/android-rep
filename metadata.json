@@ -1,0 +1,6 @@
+{
+  "name": "مندوب التوزيع",
+  "description": "تطبيق مندوب التوزيع والمبيعات الميدانية لإدارة الفواتير والتحصيل والطباعة عبر البلوتوث",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

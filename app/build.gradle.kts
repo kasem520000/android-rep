@@ -40,6 +40,12 @@ android {
     }
 
     signingConfigs {
+        create("debugConfig") {
+            storeFile = file("${rootDir}/debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
         if (releaseKeystorePresent) {
             create("release") {
                 storeFile = file(ciStoreFile ?: keystoreProperties.getProperty("storeFile"))
@@ -51,12 +57,15 @@ android {
     }
 
     buildTypes {
+        debug {
+            signingConfig = signingConfigs.getByName("debugConfig")
+        }
         release {
             isMinifyEnabled = false
             signingConfig = if (releaseKeystorePresent) {
                 signingConfigs.getByName("release")
             } else {
-                signingConfigs.getByName("debug")
+                signingConfigs.getByName("debugConfig")
             }
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
