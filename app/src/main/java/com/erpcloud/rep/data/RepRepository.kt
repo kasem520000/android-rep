@@ -191,9 +191,9 @@ class RepRepository(
     }
 
     /** إرسالُ إجراءٍ **غير قابلٍ للحفظ** (استلام/إقفال) — لا طابورَ ولا إعادة. */
-    suspend fun submitDirect(
+    suspend fun <T> submitDirect(
         labelAr: String,
-        call: suspend () -> Response<JsonElement>,
+        call: suspend () -> Response<T>,
     ): ActionResult = withContext(Dispatchers.IO) {
         try {
             val response = call()
@@ -244,7 +244,7 @@ class RepRepository(
                             "خطأُ خادمٍ (${error.httpStatus}) — النيّةُ لم تُرفض فتبقى في الطابور."
                         )
                         error.errorCode == "IDEMPOTENCY_REPLAY" -> ActionResult.Refused(
-                            error.userMessage + " — المفتاحُ نفسه استُعمل بحمولةٍ مختلفة: النيّةُ عُدِّلت بعد حفظها وتحتاج قرارك لا إعادةً عمياء."
+                            error.userMessage + " — المفتاحُ نفسه استُعمل بحمولةٍ مختلفة: النيّةُ عُدِّلت بعد حفظها وتحتاج قرارك[...]"
                         )
                         else -> ActionResult.Refused(error.userMessage)
                     }
