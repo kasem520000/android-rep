@@ -1,0 +1,32 @@
+workflows:
+  android-apk:
+    name: Build Android APK
+    instance_type: mac_mini_m1   # أو: linux | mac_mini_m2
+    max_build_duration: 60
+
+    environment:
+      java: 17
+      android_signing:
+        - my_keystore        # اسم الـ keystore المرفوع في Settings → Code signing
+      groups:
+        - my_credentials     # مجموعة متغيرات البيئة (اختياري)
+
+    scripts:
+      - name: Grant execute permission to gradlew
+        script: chmod +x ./gradlew
+
+      - name: Build Debug APK
+        script: ./gradlew assembleDebug
+
+      - name: Build Release APK
+        script: ./gradlew assembleRelease
+
+    artifacts:
+      - app/build/outputs/apk/debug/*.apk
+      - app/build/outputs/apk/release/*.apk
+      - app/build/outputs/bundle/release/*.aab
+
+    publishing:
+      email:
+        recipients:
+          - your@email.com   # استلام APK عبر البريد بعد كل بناء ناجح
